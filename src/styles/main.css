@@ -1,0 +1,273 @@
+:root {
+  /* Color Palette (Dark Theme with Gold Accents) */
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #121212;
+  --bg-tertiary: #1E1E1E;
+  
+  --text-primary: #FFFFFF;
+  --text-secondary: #B3B3B3;
+  --text-tertiary: #808080;
+  
+  --gold-primary: #D4AF37;
+  --gold-secondary: #C5A028;
+  --gold-light: rgba(212, 175, 55, 0.15);
+  --gold-super-light: rgba(212, 175, 55, 0.05);
+  
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-active: rgba(212, 175, 55, 0.3);
+  
+  /* Typography */
+  --font-heading: 'Playfair Display', serif;
+  --font-body: 'Inter', sans-serif;
+  
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 2rem;
+  --spacing-xl: 4rem;
+  --spacing-xxl: 8rem;
+  
+  /* Radii */
+  --radius-sm: 4px;
+  --radius-md: 12px;
+  --radius-lg: 24px;
+  --radius-full: 9999px;
+  
+  /* Shadows */
+  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.8);
+  --shadow-gold: 0 0 15px rgba(212, 175, 55, 0.15);
+  --shadow-gold-hover: 0 0 25px rgba(212, 175, 55, 0.3);
+  
+  /* Transition */
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+}
+
+/* Reset */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212, 175, 55, 0.4) var(--bg-primary);
+}
+
+/* Custom Scrollbar for Webkit */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-primary); 
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.4); 
+  border-radius: 6px;
+  border: 3px solid var(--bg-primary);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gold-secondary); 
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-sm);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--gold-primary);
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+ul {
+  list-style: none;
+}
+
+button {
+  font-family: inherit;
+}
+
+/* Pattern Overlay for subtle Islamic texture */
+body::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: radial-gradient(var(--gold-primary) 1px, transparent 1px),
+  radial-gradient(var(--gold-primary) 1px, transparent 1px);
+  background-position: 0 0, 25px 25px;
+  background-size: 50px 50px;
+  opacity: 0.02;
+  pointer-events: none;
+  z-index: -1;
+  position: fixed;
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-md);
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding: 0 var(--spacing-lg);
+  }
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+main {
+  flex: 1;
+}
+
+.fade-in {
+  animation: fadeIn var(--transition-slow) forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.section {
+  padding: var(--spacing-xl) 0;
+}
+.section-title {
+  text-align: center;
+  font-size: 2.5rem;
+  margin-bottom: var(--spacing-lg);
+  color: var(--gold-primary);
+}
+.section-subtitle {
+  text-align: center;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-xl);
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Custom Cursor */
+@media (pointer: fine) {
+  body {
+    cursor: none;
+  }
+  a, button, input, textarea, .card, .feature-card {
+    cursor: none !important;
+  }
+}
+
+.cursor-dot {
+  position: fixed;
+  width: 6px;
+  height: 6px;
+  background-color: var(--gold-primary);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  transition: width 0.3s, height 0.3s, background-color 0.3s;
+}
+
+.cursor-outline {
+  position: fixed;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9998;
+  transform: translate(-50%, -50%);
+  transition: width 0.3s, height 0.3s, background-color 0.3s, border-color 0.3s;
+}
+
+.cursor-hovering.cursor-outline {
+  width: 60px;
+  height: 60px;
+  background-color: rgba(212, 175, 55, 0.05);
+  border-color: rgba(212, 175, 55, 0.8);
+}
+
+.cursor-hovering.cursor-dot {
+  width: 8px;
+  height: 8px;
+  background-color: var(--text-primary);
+}
+
+/* Scroll Reveal */
+.reveal-hidden {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Staggered delays for mapped lists */
+.card:nth-child(2), .feature-card:nth-child(2), .testimonial-card:nth-child(2) { transition-delay: 0.1s; }
+.card:nth-child(3), .feature-card:nth-child(3), .testimonial-card:nth-child(3) { transition-delay: 0.2s; }
+.card:nth-child(4), .feature-card:nth-child(4) { transition-delay: 0.3s; }
+.card:nth-child(5) { transition-delay: 0.4s; }
+.card:nth-child(6) { transition-delay: 0.5s; }
+
+/* Text Gradients */
+.text-gradient-gold {
+  background: linear-gradient(135deg, var(--gold-primary) 0%, #FFF2CD 50%, var(--gold-secondary) 100%);
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: shine 5s linear infinite;
+  display: inline-block;
+}
+
+@keyframes shine {
+  to { background-position: 200% center; }
+}
+
+.glass-panel {
+  background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
+  backdrop-filter: blur(16px) saturate(120%);
+  -webkit-backdrop-filter: blur(16px) saturate(120%);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}

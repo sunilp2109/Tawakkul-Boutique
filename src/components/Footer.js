@@ -1,0 +1,54 @@
+export function Footer() {
+  return `
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-grid">
+          <div class="footer-col" style="max-width:300px">
+            <h4><span style="color:var(--text-primary)">Tawakkul</span> Boutique</h4>
+            <p style="color: var(--text-secondary); font-size: 0.95rem; margin-top: var(--spacing-sm);">
+              Premium customized Islamic gifts crafted with excellence. Delivering joy across India.
+            </p>
+            <div class="footer-social">
+              <a href="https://instagram.com" target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+              <a href="https://wa.me/919876543210" target="_blank" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+              <a href="mailto:hello@tawakkulboutique.com" aria-label="Email"><i class="far fa-envelope"></i></a>
+            </div>
+          </div>
+          
+          <div class="footer-col">
+            <h4>Quick Links</h4>
+            <div class="footer-links">
+              <a href="/" data-link>Home</a>
+              <a href="/products" data-link>Shop All Gifts</a>
+              <a href="/about" data-link>Our Story</a>
+              <a href="/contact" data-link>Contact Us</a>
+            </div>
+          </div>
+          
+          <div class="footer-col">
+            <h4>Categories</h4>
+            <div class="footer-links">
+              <a href="/products?category=Gift Boxes" data-link>Gift Boxes</a>
+              <a href="/products?category=Islamic Frames" data-link>Islamic Frames</a>
+              <a href="/products?category=Nikah Gifts" data-link>Nikah Gifts</a>
+              <a href="/products?category=Eid Specials" data-link>Eid Specials</a>
+            </div>
+          </div>
+          
+          <div class="footer-col">
+            <h4>Contact Info</h4>
+            <div class="footer-links">
+              <a href="https://wa.me/919876543210" target="_blank"><i class="fab fa-whatsapp"></i> +91 98765 43210</a>
+              <a href="mailto:hello@tawakkulboutique.com"><i class="far fa-envelope"></i> hello@tawakkulboutique.com</a>
+              <span style="color: var(--text-secondary);"><i class="fas fa-map-marker-alt"></i> Chennai, Tamil Nadu, India</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="footer-bottom">
+          &copy; 2026 Tawakkul Boutique. All rights reserved.
+        </div>
+      </div>
+    </footer>
+  `;
+}
