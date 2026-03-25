@@ -1,27 +1,54 @@
-import { products, categories, formatPrice } from '../data/products.js';
+import { fetchProducts, fetchCategories, getImageUrl } from '../utils/api.js';
+import { formatPrice } from '../data/products.js';
 
-export function ProductsPage() {
+export async function ProductsPage() {
   const searchParams = new URLSearchParams(window.location.search);
   const currentCategory = searchParams.get('category') || 'All';
   
-  const filteredProducts = currentCategory === 'All' 
-    ? products 
-    : products.filter(p => p.category === currentCategory);
+  // Fetch data from API
+  let products = [];
+  let categoriesList = ['All'];
 
-  const productCardsHTML = filteredProducts.map(p => `
-    <a href="/product/${p.id}" class="card" data-link>
+  try {
+    const [productsResponse, categoriesResponse] = await Promise.all([
+      fetchProducts({ 
+        category: currentCategory !== 'All' ? currentCategory : undefined,
+        limit: 100 
+      }),
+      fetchCategories()
+    ]);
+    
+    products = productsResponse.data || [];
+    if (categoriesResponse.data) {
+      categoriesList = ['All', ...categoriesResponse.data.map(c => typeof c === 'string' ? c : c.name)];
+    }
+    console.log(`Fetched ${products.length} products for category: ${currentCategory}`);
+  } catch (err) {
+    console.error('Error fetching products:', err);
+    return `
+      <div class="container section" style="text-align:center; padding: 5rem 0;">
+        <i class="fas fa-exclamation-triangle" style="font-size:3rem; color:var(--error-color); margin-bottom:1rem;"></i>
+        <h2>Unable to load products</h2>
+        <p>There was an error connecting to the server. Please try again later.</p>
+        <button class="btn btn-primary" style="margin-top:1rem;" onclick="location.reload()">Retry</button>
+      </div>
+    `;
+  }
+
+  const productCardsHTML = products.map(p => `
+    <a href="/product/${p._id}" class="card" data-link>
       <div class="card-img-wrapper">
-        <img src="${p.image}" alt="${p.name}" class="card-img" loading="lazy">
+        <img src="${getImageUrl(p.images?.[0])}" alt="${p.name}" class="card-img" loading="lazy">
       </div>
       <div class="card-body">
         <h3 class="card-title">${p.name}</h3>
         <p class="card-price">${formatPrice(p.price)}</p>
-        <button class="btn btn-outline" style="width:100%; margin-top:auto;" onclick="window.navigateTo('/product/${p.id}')">View Details</button>
+        <button class="btn btn-outline" style="width:100%; margin-top:auto;" onclick="window.navigateTo('/product/${p._id}')">View Details</button>
       </div>
     </a>
   `).join('');
 
-  const filterButtonsHTML = categories.map(c => `
+  const filterButtonsHTML = categoriesList.map(c => `
     <a href="/products?category=${encodeURIComponent(c)}" 
        class="filter-btn ${c === currentCategory ? 'active' : ''}" data-link>
       ${c}
@@ -42,7 +69,7 @@ export function ProductsPage() {
           ${filterButtonsHTML}
         </div>
         
-        ${filteredProducts.length > 0 ? `
+        ${products.length > 0 ? `
           <div class="products-grid">
             ${productCardsHTML}
           </div>

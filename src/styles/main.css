@@ -188,7 +188,7 @@ main {
   body {
     cursor: none;
   }
-  a, button, input, textarea, .card, .feature-card {
+  a, button, input, textarea, .card, .feature-card, .thumbnail, .similar-card {
     cursor: none !important;
   }
 }
@@ -270,4 +270,40 @@ main {
   -webkit-backdrop-filter: blur(16px) saturate(120%);
   border: 1px solid rgba(255, 255, 255, 0.04);
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* Navbar Actions (Cart) */
+.nav-actions {
+  display: flex;
+  align-items: center;
+  margin-left: var(--spacing-md);
+}
+.cart-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  transition: color var(--transition-fast);
+  padding: 0.5rem;
+}
+.cart-icon:hover {
+  color: var(--gold-primary);
+}
+.cart-badge {
+  position: absolute;
+  top: -2px;
+  right: -5px;
+  background-color: var(--gold-primary);
+  color: #000;
+  font-size: 0.7rem;
+  font-weight: 700;
+  height: 20px;
+  min-width: 20px;
+  padding: 0 5px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--bg-primary);
 }

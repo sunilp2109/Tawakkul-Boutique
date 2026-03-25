@@ -39,7 +39,7 @@ export function initCustomCursor() {
   animateOutline();
 
   const addHoverEffects = () => {
-    const interactables = document.querySelectorAll('a, button, .card, .feature-card, input, textarea');
+    const interactables = document.querySelectorAll('a, button, .card, .feature-card, input, textarea, .thumbnail, .similar-card');
     
     interactables.forEach(el => {
       // Avoid adding multiple listeners
@@ -76,8 +76,8 @@ export function initMagneticButtons() {
         const x = e.clientX - rect.left - rect.width / 2;
         const y = e.clientY - rect.top - rect.height / 2;
         
-        // Move the button slightly towards cursor
-        this.style.transform = `translate(${x * 0.25}px, ${y * 0.25}px)`;
+        // Move the button slightly towards cursor with lower intensity
+        this.style.transform = `translate(${x * 0.1}px, ${y * 0.1}px)`;
       });
       
       btn.addEventListener('mouseleave', function() {

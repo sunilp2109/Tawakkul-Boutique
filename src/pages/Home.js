@@ -1,7 +1,9 @@
-import { products, categories, formatPrice } from '../data/products.js';
+import { fetchProducts, getImageUrl } from '../utils/api.js';
+import { formatPrice } from '../data/products.js';
 
-export function HomePage() {
-  const featured = products.filter(p => p.isFeatured).slice(0, 3);
+export async function HomePage() {
+  const productsResponse = await fetchProducts({ isFeatured: true, limit: 3 });
+  const featured = productsResponse.data || [];
   
   const editorialHTML = featured.map((p, i) => {
     // 0: text left, full image right
@@ -17,11 +19,11 @@ export function HomePage() {
               <h2 class="cinematic-title-small gs-reveal">${p.name}</h2>
               <p class="editorial-desc gs-reveal">${p.description}</p>
               <div class="mt-md gs-reveal">
-                <a href="/product/${p.id}" class="btn btn-outline" data-link>Detailed View &mdash; ${formatPrice(p.price)}</a>
+                <a href="/product/${p._id}" class="btn btn-outline" data-link>Detailed View &mdash; ${formatPrice(p.price)}</a>
               </div>
             </div>
             <div class="editorial-visual">
-              <img src="${p.image}" alt="${p.name}" class="editorial-img-full gs-reveal float-img" data-speed="1.05" loading="lazy">
+              <img src="${getImageUrl(p.images?.[0])}" alt="${p.name}" class="editorial-img-full gs-reveal float-img" data-speed="1.05" loading="lazy">
             </div>
           </div>
         </div>
@@ -35,11 +37,11 @@ export function HomePage() {
               <h2 class="cinematic-title-small gs-reveal">${p.name}</h2>
               <p class="editorial-desc gs-reveal">${p.description}</p>
               <div class="mt-md gs-reveal">
-                <a href="/product/${p.id}" class="btn btn-outline" data-link>Detailed View &mdash; ${formatPrice(p.price)}</a>
+                <a href="/product/${p._id}" class="btn btn-outline" data-link>Detailed View &mdash; ${formatPrice(p.price)}</a>
               </div>
             </div>
             <div class="editorial-visual img-left">
-              <img src="${p.image}" alt="${p.name}" class="editorial-img-float gs-reveal float-img" data-speed="0.9" loading="lazy">
+              <img src="${getImageUrl(p.images?.[0])}" alt="${p.name}" class="editorial-img-float gs-reveal float-img" data-speed="0.9" loading="lazy">
             </div>
           </div>
         </div>
@@ -53,11 +55,11 @@ export function HomePage() {
               <h2 class="cinematic-title-small gs-reveal">${p.name}</h2>
               <p class="editorial-desc gs-reveal">${p.description}</p>
               <div class="mt-md gs-reveal">
-                <a href="/product/${p.id}" class="btn btn-outline" data-link>Detailed View &mdash; ${formatPrice(p.price)}</a>
+                <a href="/product/${p._id}" class="btn btn-outline" data-link>Detailed View &mdash; ${formatPrice(p.price)}</a>
               </div>
             </div>
             <div class="editorial-visual img-right">
-              <img src="${p.image}" alt="${p.name}" class="editorial-img-float gs-reveal float-img" data-speed="1.1" loading="lazy">
+              <img src="${getImageUrl(p.images?.[0])}" alt="${p.name}" class="editorial-img-float gs-reveal float-img" data-speed="1.1" loading="lazy">
             </div>
           </div>
         </div>

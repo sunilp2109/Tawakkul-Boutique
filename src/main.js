@@ -5,13 +5,22 @@ import { ProductsPage } from './pages/Products.js';
 import { ProductDetailPage } from './pages/ProductDetail.js';
 import { AboutPage } from './pages/About.js';
 import { ContactPage } from './pages/Contact.js';
+import { CartPage } from './pages/Cart.js';
+import { CheckoutPage } from './pages/Checkout.js';
+import { PaymentPage } from './pages/Payment.js';
+import { SuccessPage } from './pages/Success.js';
 import { initCustomCursor, initMagneticButtons, initScrollReveal } from './utils/animations.js';
+import { getCartItemCount } from './utils/cart.js';
 
 const routes = {
   '/': HomePage,
   '/products': ProductsPage,
   '/about': AboutPage,
   '/contact': ContactPage,
+  '/cart': CartPage,
+  '/checkout': CheckoutPage,
+  '/payment': PaymentPage,
+  '/success': SuccessPage,
 };
 
 const router = async () => {
@@ -25,10 +34,10 @@ const router = async () => {
   let pageContent = '';
   if (path.startsWith('/product/') && path.length > 9) {
     const id = path.split('/')[2];
-    pageContent = ProductDetailPage(id);
+    pageContent = await ProductDetailPage(id);
   } else {
     const pageComponent = routes[path] || HomePage;
-    pageContent = pageComponent();
+    pageContent = await pageComponent();
   }
 
   const mainContent = document.getElementById('main-content');
@@ -95,11 +104,22 @@ const attachGlobalListeners = () => {
 
 window.addEventListener('popstate', router);
 
+const updateCartBadge = () => {
+  const badge = document.getElementById('nav-cart-badge');
+  if (badge) {
+    const count = getCartItemCount();
+    badge.textContent = count;
+    badge.style.display = count > 0 ? 'flex' : 'none';
+  }
+};
+window.addEventListener('cartUpdated', updateCartBadge);
+
 document.addEventListener('DOMContentLoaded', () => {
   initCustomCursor();
   initMagneticButtons();
   initScrollReveal();
-  router();
+  router().then(() => updateCartBadge());
 });
 
 window.navigateTo = navigateTo;
+window.refreshPage = router;
