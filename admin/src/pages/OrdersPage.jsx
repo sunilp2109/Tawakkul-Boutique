@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import API from '../lib/api';
 import toast from 'react-hot-toast';
-import { Plus, X, Search, ChevronDown, Eye, MessageSquare, Loader2 } from 'lucide-react';
+import { Plus, X, Search, Eye, MessageSquare, Loader2, Send } from 'lucide-react';
 
 const STATUSES = ['Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled'];
 const statusColor = {
@@ -27,6 +27,7 @@ export default function OrdersPage() {
   const [addModal, setAddModal] = useState(false);
   const [form, setForm] = useState(emptyOrderForm);
   const [saving, setSaving] = useState(false);
+  const [sendingWa, setSendingWa] = useState(null); // orderId being sent
 
   useEffect(() => { fetchOrders(); }, [page, search, filterStatus]);
   useEffect(() => { fetchProducts(); }, []);
@@ -50,9 +51,19 @@ export default function OrdersPage() {
   const handleStatusChange = async (orderId, status) => {
     try {
       await API.patch(`/orders/${orderId}/status`, { status });
-      toast.success(`Status updated to ${status}`);
+      toast.success(`Status updated to ${status} 📲 WhatsApp sending...`);
       setOrders(prev => prev.map(o => o._id === orderId ? { ...o, status } : o));
     } catch (_) { toast.error('Failed to update status'); }
+  };
+
+  const handleSendWhatsApp = async (orderId) => {
+    setSendingWa(orderId);
+    try {
+      await API.post(`/orders/${orderId}/whatsapp`);
+      toast.success('✅ WhatsApp message sent!');
+    } catch (err) {
+      toast.error(err.response?.data?.message || '❌ Failed to send WhatsApp');
+    } finally { setSendingWa(null); }
   };
 
   const handleProductSelect = (e) => {
@@ -183,8 +194,16 @@ export default function OrdersPage() {
                   <td className="text-gray-500 text-xs whitespace-nowrap">{new Date(order.createdAt).toLocaleDateString('en-IN')}</td>
                   <td>
                     <div className="flex gap-1">
-                      <button onClick={() => setDetailOrder(order)} className="p-1.5 rounded-lg hover:bg-dark-700 text-gray-400 hover:text-blue-400"><Eye size={14} /></button>
-                      <button onClick={() => handleDelete(order._id)} className="p-1.5 rounded-lg hover:bg-red-900/20 text-gray-400 hover:text-red-400"><X size={14} /></button>
+                      <button onClick={() => setDetailOrder(order)} className="p-1.5 rounded-lg hover:bg-dark-700 text-gray-400 hover:text-blue-400" title="View details"><Eye size={14} /></button>
+                      <button
+                        onClick={() => handleSendWhatsApp(order._id)}
+                        disabled={sendingWa === order._id}
+                        className="p-1.5 rounded-lg hover:bg-green-900/30 text-gray-400 hover:text-green-400 disabled:opacity-40"
+                        title="Send WhatsApp message"
+                      >
+                        {sendingWa === order._id ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+                      </button>
+                      <button onClick={() => handleDelete(order._id)} className="p-1.5 rounded-lg hover:bg-red-900/20 text-gray-400 hover:text-red-400" title="Delete order"><X size={14} /></button>
                     </div>
                   </td>
                 </tr>
@@ -249,6 +268,16 @@ export default function OrdersPage() {
                 <InfoBlock label="Status" value={detailOrder.status} />
                 <InfoBlock label="Date" value={new Date(detailOrder.createdAt).toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' })} />
               </div>
+              <div className="h-px bg-dark-700" />
+              <button
+                onClick={() => { handleSendWhatsApp(detailOrder._id); }}
+                disabled={sendingWa === detailOrder._id}
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-green-600/20 border border-green-600/30 text-green-400 hover:bg-green-600/30 transition-colors text-sm font-medium disabled:opacity-50"
+              >
+                {sendingWa === detailOrder._id
+                  ? <><Loader2 size={15} className="animate-spin" /> Sending...</>
+                  : <><MessageSquare size={15} /> Send WhatsApp Message</>}
+              </button>
             </div>
           </div>
         </div>

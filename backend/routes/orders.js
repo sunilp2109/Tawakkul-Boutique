@@ -1,6 +1,7 @@
 const express = require('express');
 const Order = require('../models/Order');
 const { protect } = require('../middleware/auth');
+const { sendWhatsAppMessage, getStatusMessage, getNewOrderMessage } = require('../services/whatsapp');
 
 const router = express.Router();
 
@@ -57,10 +58,17 @@ router.get('/:id', protect, async (req, res) => {
   }
 });
 
-// @route   POST /api/orders
+// @route   POST /api/orders — create order + send WhatsApp greeting
 router.post('/', async (req, res) => {
   try {
     const order = await Order.create(req.body);
+
+    // Send WhatsApp welcome message (non-blocking)
+    if (order.customer?.phone) {
+      const options = getNewOrderMessage(order.customer.name, order.orderNumber);
+      sendWhatsAppMessage(order.customer.phone, options).catch(() => {});
+    }
+
     res.status(201).json({ success: true, data: order });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
@@ -79,15 +87,54 @@ router.put('/:id', protect, async (req, res) => {
   }
 });
 
-// @route   PATCH /api/orders/:id/status  — just update status
+// @route   PATCH /api/orders/:id/status — update status + send WhatsApp notification
 router.patch('/:id/status', protect, async (req, res) => {
   try {
     const { status } = req.body;
     const order = await Order.findByIdAndUpdate(req.params.id, { status }, { new: true });
     if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+
+    // Send WhatsApp status notification (non-blocking)
+    if (order.customer?.phone) {
+      const options = getStatusMessage(status, order.customer.name, order.orderNumber);
+      if (options) {
+        sendWhatsAppMessage(order.customer.phone, options).catch(() => {});
+      }
+    }
+
     res.json({ success: true, data: order });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
+  }
+});
+
+// @route   POST /api/orders/:id/whatsapp — manual WhatsApp message from admin
+router.post('/:id/whatsapp', protect, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+    if (!order.customer?.phone) return res.status(400).json({ success: false, message: 'Customer has no phone number' });
+
+    // Use provided custom message or fall back to current status message
+    const { message: customMessage } = req.body;
+    let options;
+    
+    if (customMessage) {
+      options = { type: 'text', text: customMessage };
+    } else {
+      options = getStatusMessage(order.status, order.customer.name, order.orderNumber) ||
+                getNewOrderMessage(order.customer.name, order.orderNumber);
+    }
+
+    const sent = await sendWhatsAppMessage(order.customer.phone, options);
+
+    if (sent) {
+      res.json({ success: true, message: 'WhatsApp message sent successfully' });
+    } else {
+      res.status(500).json({ success: false, message: 'Failed to send WhatsApp message.' });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
