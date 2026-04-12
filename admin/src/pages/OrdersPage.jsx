@@ -38,22 +38,33 @@ export default function OrdersPage() {
       const res = await API.get('/orders', { params: { page, limit: 15, search: search || undefined, status: filterStatus || undefined } });
       setOrders(res.data.data);
       setTotalPages(res.data.pagination.pages);
-    } catch (_) {} finally { setLoading(false); }
+    } catch (_) { } finally { setLoading(false); }
   };
 
   const fetchProducts = async () => {
     try {
       const res = await API.get('/products', { params: { limit: 100 } });
       setProducts(res.data.data);
-    } catch (_) {}
+    } catch (_) { }
   };
 
   const handleStatusChange = async (orderId, status) => {
+    const loadingToast = toast.loading(`Updating status to ${status}...`);
     try {
-      await API.patch(`/orders/${orderId}/status`, { status });
-      toast.success(`Status updated to ${status} 📲 WhatsApp sending...`);
+      const res = await API.patch(`/orders/${orderId}/status`, { status });
+      toast.dismiss(loadingToast);
+      if (res.data.whatsappStatus === 'failed') {
+        toast.error(`Order ${status}, but failed to WhatsApp`);
+      } else if (res.data.whatsappStatus === 'sent') {
+        toast.success(`Order ${status} & WhatsApp sent ✅`);
+      } else {
+        toast.success(`Status updated to ${status}`);
+      }
       setOrders(prev => prev.map(o => o._id === orderId ? { ...o, status } : o));
-    } catch (_) { toast.error('Failed to update status'); }
+    } catch (_) {
+      toast.dismiss(loadingToast);
+      toast.error('Failed to update status');
+    }
   };
 
   const handleSendWhatsApp = async (orderId) => {
@@ -75,18 +86,18 @@ export default function OrdersPage() {
     e.preventDefault();
     if (!form.customerName || !form.customerPhone || !form.customerAddress || !form.productName || !form.productPrice)
       return toast.error('Fill in required fields');
-    setSaving(true);
+    const loadingToast = toast.loading('Adding order & sending WhatsApp...');
     try {
       const unitPrice = parseFloat(form.productPrice);
       const qty = parseInt(form.quantity || 1);
       const total = unitPrice * qty;
-      
-      await API.post('/orders', {
-        customer: { 
-          name: form.customerName, 
-          phone: form.customerPhone, 
-          address: form.customerAddress, 
-          email: form.customerEmail 
+
+      const res = await API.post('/orders', {
+        customer: {
+          name: form.customerName,
+          phone: form.customerPhone,
+          address: form.customerAddress,
+          email: form.customerEmail
         },
         items: [{
           product: form.productId || undefined,
@@ -99,11 +110,19 @@ export default function OrdersPage() {
         source: form.source,
         notes: form.notes,
       });
-      toast.success('Order added!');
+
+      toast.dismiss(loadingToast);
+      if (res.data.whatsappStatus === 'failed') {
+        toast.success('Order added, but failed to send WhatsApp message ❌');
+      } else {
+        toast.success('Order added & message sent via WhatsApp ✅');
+      }
+
       setAddModal(false);
       setForm(emptyOrderForm);
       fetchOrders();
     } catch (err) {
+      toast.dismiss(loadingToast);
       toast.error(err.response?.data?.message || 'Failed to add order');
     } finally { setSaving(false); }
   };
@@ -180,13 +199,12 @@ export default function OrdersPage() {
                     <select
                       value={order.status}
                       onChange={e => handleStatusChange(order._id, e.target.value)}
-                      className={`text-xs rounded-full px-2 py-1 border bg-transparent cursor-pointer ${
-                        order.status === 'Pending' ? 'border-yellow-700 text-yellow-400' :
+                      className={`text-xs rounded-full px-2 py-1 border bg-transparent cursor-pointer ${order.status === 'Pending' ? 'border-yellow-700 text-yellow-400' :
                         order.status === 'Confirmed' ? 'border-blue-700 text-blue-400' :
-                        order.status === 'Shipped' ? 'border-purple-700 text-purple-400' :
-                        order.status === 'Delivered' ? 'border-green-700 text-green-400' :
-                        'border-red-800 text-red-400'
-                      } bg-dark-800`}
+                          order.status === 'Shipped' ? 'border-purple-700 text-purple-400' :
+                            order.status === 'Delivered' ? 'border-green-700 text-green-400' :
+                              'border-red-800 text-red-400'
+                        } bg-dark-800`}
                     >
                       {STATUSES.map(s => <option key={s} value={s} className="bg-dark-800 text-gray-200">{s}</option>)}
                     </select>
@@ -213,9 +231,9 @@ export default function OrdersPage() {
         </div>
         {totalPages > 1 && (
           <div className="flex items-center justify-center gap-2 p-4 border-t border-dark-700">
-            <button disabled={page === 1} onClick={() => setPage(p => p-1)} className="px-3 py-1 rounded-lg bg-dark-700 text-sm text-gray-300 disabled:opacity-40 hover:bg-dark-600">Prev</button>
+            <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 rounded-lg bg-dark-700 text-sm text-gray-300 disabled:opacity-40 hover:bg-dark-600">Prev</button>
             <span className="text-sm text-gray-400">{page} / {totalPages}</span>
-            <button disabled={page === totalPages} onClick={() => setPage(p => p+1)} className="px-3 py-1 rounded-lg bg-dark-700 text-sm text-gray-300 disabled:opacity-40 hover:bg-dark-600">Next</button>
+            <button disabled={page === totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 rounded-lg bg-dark-700 text-sm text-gray-300 disabled:opacity-40 hover:bg-dark-600">Next</button>
           </div>
         )}
       </div>
@@ -266,7 +284,7 @@ export default function OrdersPage() {
                 {detailOrder.notes && <InfoBlock label="Notes" value={detailOrder.notes} className="col-span-2" />}
                 <InfoBlock label="Source" value={detailOrder.source} />
                 <InfoBlock label="Status" value={detailOrder.status} />
-                <InfoBlock label="Date" value={new Date(detailOrder.createdAt).toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' })} />
+                <InfoBlock label="Date" value={new Date(detailOrder.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })} />
               </div>
               <div className="h-px bg-dark-700" />
               <button
@@ -296,23 +314,23 @@ export default function OrdersPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="label">Name *</label>
-                  <input className="input-field" value={form.customerName} onChange={e => setForm({...form, customerName: e.target.value})} placeholder="Mohammed Ahmed" />
+                  <input className="input-field" value={form.customerName} onChange={e => setForm({ ...form, customerName: e.target.value })} placeholder="Mohammed Ahmed" />
                 </div>
                 <div>
                   <label className="label">Phone *</label>
-                  <input className="input-field" value={form.customerPhone} onChange={e => setForm({...form, customerPhone: e.target.value})} placeholder="+91 98765 43210" />
+                  <input className="input-field" value={form.customerPhone} onChange={e => setForm({ ...form, customerPhone: e.target.value })} placeholder="+91 98765 43210" />
                 </div>
                 <div className="col-span-2">
                   <label className="label">Address *</label>
-                  <input className="input-field" value={form.customerAddress} onChange={e => setForm({...form, customerAddress: e.target.value})} placeholder="Full address" />
+                  <input className="input-field" value={form.customerAddress} onChange={e => setForm({ ...form, customerAddress: e.target.value })} placeholder="Full address" />
                 </div>
                 <div>
                   <label className="label">Email</label>
-                  <input className="input-field" value={form.customerEmail} onChange={e => setForm({...form, customerEmail: e.target.value})} placeholder="email@example.com" />
+                  <input className="input-field" value={form.customerEmail} onChange={e => setForm({ ...form, customerEmail: e.target.value })} placeholder="email@example.com" />
                 </div>
                 <div>
                   <label className="label">Order Source</label>
-                  <select className="input-field" value={form.source} onChange={e => setForm({...form, source: e.target.value})}>
+                  <select className="input-field" value={form.source} onChange={e => setForm({ ...form, source: e.target.value })}>
                     <option value="WhatsApp">WhatsApp</option>
                     <option value="Website">Website</option>
                     <option value="Direct">Direct</option>
@@ -330,23 +348,23 @@ export default function OrdersPage() {
                 </div>
                 <div>
                   <label className="label">Product Name *</label>
-                  <input className="input-field" value={form.productName} onChange={e => setForm({...form, productName: e.target.value})} placeholder="Product name" />
+                  <input className="input-field" value={form.productName} onChange={e => setForm({ ...form, productName: e.target.value })} placeholder="Product name" />
                 </div>
                 <div>
                   <label className="label">Price (₹) *</label>
-                  <input className="input-field" type="number" value={form.productPrice} onChange={e => setForm({...form, productPrice: e.target.value})} placeholder="2499" />
+                  <input className="input-field" type="number" value={form.productPrice} onChange={e => setForm({ ...form, productPrice: e.target.value })} placeholder="2499" />
                 </div>
                 <div>
                   <label className="label">Quantity</label>
-                  <input className="input-field" type="number" min="1" value={form.quantity} onChange={e => setForm({...form, quantity: e.target.value})} />
+                  <input className="input-field" type="number" min="1" value={form.quantity} onChange={e => setForm({ ...form, quantity: e.target.value })} />
                 </div>
                 <div>
                   <label className="label">Customization (Name/Message)</label>
-                  <input className="input-field" value={form.customization} onChange={e => setForm({...form, customization: e.target.value})} placeholder="Add name or message..." />
+                  <input className="input-field" value={form.customization} onChange={e => setForm({ ...form, customization: e.target.value })} placeholder="Add name or message..." />
                 </div>
                 <div className="col-span-2">
                   <label className="label">Notes</label>
-                  <textarea className="input-field resize-none" rows={2} value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} placeholder="Any additional notes..." />
+                  <textarea className="input-field resize-none" rows={2} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Any additional notes..." />
                 </div>
               </div>
               <div className="flex gap-3 pt-2">

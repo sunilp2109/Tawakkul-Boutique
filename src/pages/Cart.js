@@ -3,8 +3,12 @@ import { getImageUrl } from '../utils/api.js';
 import { formatPrice } from '../data/products.js';
 
 window.updateQuantity = (index, qty) => {
-  updateCartItemQuantity(index, qty);
-  if (window.refreshPage) window.refreshPage();
+  const result = updateCartItemQuantity(index, qty);
+  if (result && !result.success) {
+    window.showToast(result.message, 'error');
+  } else {
+    if (window.refreshPage) window.refreshPage();
+  }
 };
 
 window.removeItem = (index) => {

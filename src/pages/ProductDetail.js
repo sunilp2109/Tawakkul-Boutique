@@ -5,30 +5,36 @@ import { addToCart } from '../utils/cart.js';
 export async function ProductDetailPage(id) {
   const response = await fetchProductById(id);
   const product = response.data;
+  if (product) {
+    document.title = `${product.name} | Tawakkul Boutique`;
+  }
 
   let similarProducts = [];
-  if (product && product.category) {
+  if (product) {
     try {
-      // Fetch similar products from the same category
-      const categoryName = typeof product.category === 'object' ? product.category.name : product.category;
-      const similarRes = await fetchProducts({ category: categoryName, limit: 5 });
-      // Filter out the current product and take up to 4
-      similarProducts = (similarRes.data || []).filter(p => p._id !== product._id).slice(0, 4);
+      // Fetch random products from all categories, excluding the current one
+      const similarRes = await fetchProducts({ random: 'true', limit: 4, exclude: product._id });
+      similarProducts = similarRes.data || [];
     } catch (err) {
       console.error("Failed to fetch similar products:", err);
     }
   }
   
-  window.handleAddToCart = (pid, name, price, img, isBuyNow = false) => {
+  window.handleAddToCart = (pid, name, price, img, stock, isBuyNow = false) => {
     const customName = document.getElementById('customName')?.value || '';
     const customMessage = document.getElementById('customMessage')?.value || '';
     
-    addToCart(
-      { _id: pid, name, price, images: [img] }, 
+    const result = addToCart(
+      { _id: pid, name, price, images: [img], stock: stock }, 
       1, 
       { name: customName, message: customMessage }
     );
     
+    if (!result.success) {
+      window.showToast(result.message, 'error');
+      return false;
+    }
+
     if (!isBuyNow) {
       const btn = document.getElementById('addToCartBtn');
       if (btn) {
@@ -45,11 +51,14 @@ export async function ProductDetailPage(id) {
         }, 2000);
       }
     }
+    return true;
   };
   
-  window.handleBuyNow = (pid, name, price, img) => {
-    window.handleAddToCart(pid, name, price, img, true);
-    window.navigateTo('/cart');
+  window.handleBuyNow = (pid, name, price, img, stock) => {
+    const added = window.handleAddToCart(pid, name, price, img, stock, true);
+    if (added) {
+      window.navigateTo('/cart');
+    }
   };
 
   if (!product) {
@@ -96,6 +105,17 @@ export async function ProductDetailPage(id) {
             <h1 class="product-title">${product.name}</h1>
             <p class="product-price">${formatPrice(product.price)}</p>
             
+            ${product.stock === 0
+              ? `<p class="stock-status" style="color:#d9534f; margin-bottom: 1rem; font-weight: 600;">
+                  <i class="fas fa-times-circle" style="margin-right: 0.25rem;"></i> Out of stock
+                 </p>`
+              : product.stock < 5
+              ? `<p class="stock-status" style="color:var(--text-secondary); margin-bottom: 1rem; font-weight: 500;">
+                  <i class="fas fa-box" style="margin-right: 0.25rem;"></i> Only ${product.stock} items left in stock
+                 </p>` 
+              : ''
+            }
+            
             <div class="product-desc">
               <p>${product.description}</p>
             </div>
@@ -114,10 +134,14 @@ export async function ProductDetailPage(id) {
               </div>
               
               <div class="product-actions">
-                <button id="addToCartBtn" class="btn btn-outline btn-block" style="flex:1" type="button" onclick="handleAddToCart('${product._id}', '${product.name}', ${product.price}, '${product.images?.[0] || ''}')">
+                <button id="addToCartBtn" class="btn btn-outline btn-block" style="flex:1" type="button" 
+                  ${product.stock === 0 ? 'disabled' : ''} 
+                  onclick="handleAddToCart('${product._id}', '${product.name.replace(/'/g, "\\'")}', ${product.price}, '${product.images?.[0] || ''}', ${product.stock})">
                   <i class="fas fa-shopping-cart" style="margin-right:0.5rem"></i> Add to Cart
                 </button>
-                <button class="btn btn-primary btn-block" style="flex:1" type="button" onclick="handleBuyNow('${product._id}', '${product.name}', ${product.price}, '${product.images?.[0] || ''}')">
+                <button class="btn btn-primary btn-block" style="flex:1" type="button" 
+                  ${product.stock === 0 ? 'disabled' : ''} 
+                  onclick="handleBuyNow('${product._id}', '${product.name.replace(/'/g, "\\'")}', ${product.price}, '${product.images?.[0] || ''}', ${product.stock})">
                   <i class="fas fa-bolt" style="margin-right:0.5rem"></i> Buy Now
                 </button>
               </div>
@@ -142,7 +166,7 @@ export async function ProductDetailPage(id) {
     ${similarProducts.length > 0 ? `
     <section class="section">
       <div class="container">
-        <h2 class="section-title" style="text-align: left; font-size: 1.8rem; margin-bottom: var(--spacing-lg);">Similar Products</h2>
+        <h2 class="section-title" style="text-align: left; font-size: 1.8rem; margin-bottom: var(--spacing-lg);">Curated For You</h2>
         <div class="similar-products-grid">
           ${similarProducts.map(p => `
             <a href="/product/${p._id}" class="similar-card" data-link>

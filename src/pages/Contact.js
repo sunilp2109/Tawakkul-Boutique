@@ -1,4 +1,13 @@
+import { getSettings } from '../utils/settings.js';
+
 export function ContactPage() {
+  const settings = getSettings();
+  const email = settings.storeEmail || 'contact@tawakkulboutique.com';
+  const whatsappNumber = settings.whatsappNumber || '919876543210';
+  const whatsappLink = `https://wa.me/${whatsappNumber.replace(/\D/g, '')}`;
+  const address = settings.storeAddress || 'Chennai, Tamil Nadu, India';
+  const instagram = settings.socialLinks?.instagram || 'https://instagram.com';
+
   return `
     <div class="page-header">
       <div class="container">
@@ -21,8 +30,8 @@ export function ContactPage() {
               <div class="contact-icon"><i class="fab fa-whatsapp"></i></div>
               <div class="contact-details">
                 <h3>WhatsApp Us</h3>
-                <p>+91 98765 43210 (Preferred)</p>
-                <a href="https://wa.me/919876543210" target="_blank" class="contact-link">Message Now &rarr;</a>
+                <p>${settings.storePhone || '+91 98765 43210'} (Preferred)</p>
+                <a href="${whatsappLink}" target="_blank" class="contact-link">Message Now &rarr;</a>
               </div>
             </div>
             
@@ -30,8 +39,8 @@ export function ContactPage() {
               <div class="contact-icon"><i class="far fa-envelope"></i></div>
               <div class="contact-details">
                 <h3>Email Us</h3>
-                <p>hello@tawakkulboutique.com</p>
-                <a href="mailto:hello@tawakkulboutique.com" class="contact-link">Send Email &rarr;</a>
+                <p>${email}</p>
+                <a href="mailto:${email}" class="contact-link">Send Email &rarr;</a>
               </div>
             </div>
             
@@ -39,7 +48,7 @@ export function ContactPage() {
               <div class="contact-icon"><i class="fas fa-map-marker-alt"></i></div>
               <div class="contact-details">
                 <h3>Location</h3>
-                <p>Chennai, Tamil Nadu, India<br><span style="color:var(--gold-primary); font-size:0.85rem">(Online Store Only)</span></p>
+                <p>${address}<br><span style="color:var(--gold-primary); font-size:0.85rem">(Online Store Only)</span></p>
               </div>
             </div>
 
@@ -47,8 +56,8 @@ export function ContactPage() {
               <div class="contact-icon"><i class="fab fa-instagram"></i></div>
               <div class="contact-details">
                 <h3>Instagram</h3>
-                <p>@tawakkul.boutique</p>
-                <a href="https://instagram.com" target="_blank" class="contact-link">Follow Us &rarr;</a>
+                <p>${instagram.split('/').pop() || '@tawakkul.boutique'}</p>
+                <a href="${instagram}" target="_blank" class="contact-link">Follow Us &rarr;</a>
               </div>
             </div>
 
@@ -57,7 +66,7 @@ export function ContactPage() {
           <div class="contact-form-col">
             <div class="form-container">
               <h3 style="font-family:var(--font-heading); font-size:1.75rem; margin-bottom:var(--spacing-lg); border-bottom:1px solid var(--border-color); padding-bottom:var(--spacing-sm);">Send an Inquiry</h3>
-              <form onsubmit="event.preventDefault(); alert('Message Sent Successfully!');">
+              <form onsubmit="event.preventDefault(); window.showToast('Message Sent Successfully!', 'success');">
                 <div class="input-group">
                   <label class="input-label" for="name">Full Name</label>
                   <input type="text" id="name" class="input-field" required placeholder="Your full name">

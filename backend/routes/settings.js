@@ -3,8 +3,20 @@ const User = require('../models/User');
 const Settings = require('../models/Settings');
 const bcrypt = require('bcryptjs');
 const { protect } = require('../middleware/auth');
+const { settingsValidator } = require('../middleware/validators');
 
 const router = express.Router();
+
+// @route GET /api/settings/public
+router.get('/public', async (req, res) => {
+  try {
+    let settings = await Settings.findOne();
+    if (!settings) settings = await Settings.create({});
+    res.json({ success: true, data: settings });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
 
 // @route GET /api/settings/store
 router.get('/store', protect, async (req, res) => {
@@ -18,7 +30,7 @@ router.get('/store', protect, async (req, res) => {
 });
 
 // @route PUT /api/settings/store
-router.put('/store', protect, async (req, res) => {
+router.put('/store', protect, settingsValidator, async (req, res) => {
   try {
     let settings = await Settings.findOne();
     if (!settings) {

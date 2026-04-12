@@ -6,7 +6,7 @@ window.submitCheckout = (event) => {
   
   const cart = getCart();
   if (cart.length === 0) {
-    alert("Your cart is empty!");
+    window.showToast("Your cart is empty!", "error");
     return;
   }
 
@@ -20,7 +20,7 @@ window.submitCheckout = (event) => {
 
   // Validate
   if (!name || !phone || !address || !city || !pincode) {
-    alert("Please fill in all required fields.");
+    window.showToast("Please fill in all required fields.", "error");
     return;
   }
 

@@ -2,6 +2,8 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { protect } = require('../middleware/auth');
+const { loginValidator } = require('../middleware/validators');
+const logger = require('../services/logger');
 
 const router = express.Router();
 
@@ -12,7 +14,7 @@ const generateToken = (id) => {
 // @route   POST /api/auth/login
 // @desc    Admin login
 // @access  Public
-router.post('/login', async (req, res) => {
+router.post('/login', loginValidator, async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -23,15 +25,19 @@ router.post('/login', async (req, res) => {
     const user = await User.findOne({ email });
 
     if (!user || !user.isActive) {
+      logger.warn(`Failed login attempt: User not found or inactive. Email: ${email}, IP: ${req.ip}`);
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
+      logger.warn(`Failed login attempt: Incorrect password. Email: ${email}, IP: ${req.ip}`);
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
     const token = generateToken(user._id);
+
+    logger.info(`Successful login: ${email}, IP: ${req.ip}`);
 
     res.json({
       success: true,

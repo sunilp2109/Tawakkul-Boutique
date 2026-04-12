@@ -123,12 +123,20 @@ export default function Layout() {
                     {notifications.length === 0 ? (
                       <p className="text-center text-gray-500 text-sm py-6">No new notifications</p>
                     ) : notifications.map(n => (
-                      <div key={n._id} className="flex items-start gap-3 p-3 border-b border-dark-700/50 hover:bg-dark-700/30 cursor-pointer" onClick={() => { markRead(n._id); setNotifOpen(false); navigate('/orders'); }}>
-                        <div className="w-2 h-2 rounded-full bg-gold-500 mt-1.5 flex-shrink-0" />
-                        <div className="min-w-0">
-                          <p className="text-sm text-white truncate font-medium">{n['customer']?.name || 'Customer'}</p>
-                          <p className="text-xs text-gray-400 truncate">{n.productName}</p>
-                          <p className="text-xs text-gray-500">{new Date(n.createdAt).toLocaleDateString('en-IN')}</p>
+                      <div key={n._id} className="flex items-start gap-3 p-4 border-b border-dark-700/50 hover:bg-dark-700/40 transition-colors cursor-pointer" onClick={() => { markRead(n._id); setNotifOpen(false); navigate('/orders'); }}>
+                        <div className="w-2.5 h-2.5 rounded-full bg-gold-500 mt-1.5 flex-shrink-0 shadow-[0_0_8px_rgba(212,175,55,0.5)]" />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex justify-between items-start mb-0.5">
+                            <p className="text-sm text-white font-semibold truncate">{n.customer?.name || 'New Customer'}</p>
+                            <span className="text-[10px] font-mono text-gold-500 bg-gold-500/10 px-1.5 py-0.5 rounded border border-gold-500/20">{n.orderNumber}</span>
+                          </div>
+                          <p className="text-xs text-gray-400 truncate mb-1">
+                            {n.items?.map(item => `${item.name} (x${item.quantity})`).join(', ') || 'New Order'}
+                          </p>
+                          <div className="flex justify-between items-center mt-2">
+                             <p className="text-xs font-bold text-green-400">₹{(n.totalAmount || 0).toLocaleString('en-IN')}</p>
+                             <p className="text-[10px] text-gray-500 italic">{new Date(n.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</p>
+                          </div>
                         </div>
                       </div>
                     ))}

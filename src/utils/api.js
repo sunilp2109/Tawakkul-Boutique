@@ -1,4 +1,10 @@
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api`;
+
+export const fetchStoreSettings = async () => {
+  const res = await fetch(`${API_BASE_URL}/settings/public`);
+  const data = await res.json();
+  return data;
+};
 
 export const fetchProducts = async (params = {}) => {
   // Remove undefined/null params
@@ -45,5 +51,5 @@ export const getImageUrl = (path) => {
   }
   
   // If it's a backend upload
-  return `http://localhost:5000${path}`;
+  return `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}${path}`;
 };

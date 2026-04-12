@@ -265,18 +265,25 @@ textarea.input-field {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--radius-full);
-  background-color: var(--bg-tertiary);
-  color: var(--text-secondary);
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--gold-primary);
   transition: all var(--transition-fast);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.footer-social a i {
+  font-size: 1.25rem;
 }
 
 .footer-social a:hover {
   background-color: var(--gold-primary);
   color: var(--bg-primary);
-  transform: translateY(-3px);
+  transform: translateY(-5px);
+  border-color: var(--gold-primary);
+  box-shadow: 0 10px 20px rgba(212, 175, 55, 0.2);
 }
 
 .footer-bottom {

@@ -1,12 +1,18 @@
 import { getCartItemCount } from '../utils/cart.js';
+import { getSettings } from '../utils/settings.js';
 
 export function Navbar() {
+  const settings = getSettings();
   const cartCount = getCartItemCount();
+  const nameParts = (settings.storeName || 'Tawakkul Boutique').split(' ');
+  const firstName = nameParts[0];
+  const restName = nameParts.slice(1).join(' ');
+
   return `
     <header class="navbar">
       <div class="container nav-container">
         <a href="/" class="brand" data-link>
-          Tawakkul <span class="brand-gold">Boutique</span>
+          ${firstName} <span class="brand-gold">${restName}</span>
         </a>
         
         <nav class="nav-links" id="nav-links">

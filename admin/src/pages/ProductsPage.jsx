@@ -26,7 +26,7 @@ export default function ProductsPage() {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const res = await API.get('/products', { params: { page, limit: 10, search: search || undefined } });
+      const res = await API.get('/products', { params: { page, limit: 10, search: search || undefined, showAll: true } });
       setProducts(res.data.data);
       setTotalPages(res.data.pagination.pages);
     } catch (_) {} finally { setLoading(false); }
@@ -101,6 +101,22 @@ export default function ProductsPage() {
     } catch (_) { toast.error('Failed to delete'); }
   };
 
+  const handleToggleActive = async (id) => {
+    try {
+      await API.patch(`/products/${id}/toggle`);
+      setProducts(prev => prev.map(p => p._id === id ? { ...p, isActive: !p.isActive } : p));
+      toast.success('Status updated');
+    } catch (_) { toast.error('Failed to update status'); }
+  };
+
+  const handleToggleFeatured = async (p) => {
+    try {
+      await API.patch(`/products/${p._id}/featured`);
+      setProducts(prev => prev.map(item => item._id === p._id ? { ...item, isFeatured: !p.isFeatured } : item));
+      toast.success(!p.isFeatured ? 'Marked as Featured' : 'Removed from Featured');
+    } catch (_) { toast.error('Failed to update'); }
+  };
+
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -123,7 +139,7 @@ export default function ProductsPage() {
         <div className="table-wrapper">
           <table className="data-table">
             <thead><tr>
-              <th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Featured</th><th>Actions</th>
+              <th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th>Actions</th>
             </tr></thead>
             <tbody>
               {loading ? (
@@ -146,9 +162,19 @@ export default function ProductsPage() {
                   <td><span className="text-xs bg-dark-700 px-2 py-1 rounded-full text-gray-300">{p.category?.name || '—'}</span></td>
                   <td className="text-green-400 font-semibold">₹{p.price.toLocaleString('en-IN')}</td>
                   <td className={p.stock <= 5 ? 'text-red-400 font-semibold' : 'text-gray-300'}>{p.stock}</td>
-                  <td>{p.isFeatured ? <Star size={16} className="text-gold-500 fill-gold-500" /> : <Star size={16} className="text-gray-600" />}</td>
+                  <td>
+                    <button onClick={() => handleToggleActive(p._id)} className={`w-10 h-5 rounded-full relative transition-colors ${p.isActive ? 'bg-green-500' : 'bg-red-500/30'}`}>
+                      <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all ${p.isActive ? 'right-1' : 'left-1'}`} />
+                    </button>
+                    <span className={`block text-[10px] uppercase font-bold mt-1 ${p.isActive ? 'text-green-500' : 'text-red-400'}`}>
+                      {p.isActive ? 'Active' : 'Disabled'}
+                    </span>
+                  </td>
                   <td>
                     <div className="flex items-center gap-2">
+                      <button onClick={() => handleToggleFeatured(p)} className={`p-1.5 rounded-lg hover:bg-dark-700 transition-colors ${p.isFeatured ? 'text-gold-500' : 'text-gray-400'}`}>
+                         <Star size={14} fill={p.isFeatured ? 'currentColor' : 'none'} />
+                      </button>
                       <button onClick={() => openEdit(p)} className="p-1.5 rounded-lg hover:bg-dark-700 text-gray-400 hover:text-blue-400 transition-colors"><Edit2 size={14} /></button>
                       <button onClick={() => handleDelete(p._id)} className="p-1.5 rounded-lg hover:bg-red-900/20 text-gray-400 hover:text-red-400 transition-colors"><Trash2 size={14} /></button>
                     </div>

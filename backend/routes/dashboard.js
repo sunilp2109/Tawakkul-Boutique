@@ -68,7 +68,7 @@ router.get('/notifications', protect, async (req, res) => {
     const notifications = await Order.find({ isRead: false })
       .sort({ createdAt: -1 })
       .limit(20)
-      .select('orderNumber customer.name items status createdAt');
+      .select('orderNumber customer.name items totalAmount status createdAt');
     res.json({ success: true, data: notifications });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

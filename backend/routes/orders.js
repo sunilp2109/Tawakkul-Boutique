@@ -1,6 +1,8 @@
 const express = require('express');
 const Order = require('../models/Order');
+const Product = require('../models/Product');
 const { protect } = require('../middleware/auth');
+const { orderValidator } = require('../middleware/validators');
 const { sendWhatsAppMessage, getStatusMessage, getNewOrderMessage } = require('../services/whatsapp');
 
 const router = express.Router();
@@ -59,17 +61,30 @@ router.get('/:id', protect, async (req, res) => {
 });
 
 // @route   POST /api/orders — create order + send WhatsApp greeting
-router.post('/', async (req, res) => {
+router.post('/', orderValidator, async (req, res) => {
   try {
     const order = await Order.create(req.body);
 
-    // Send WhatsApp welcome message (non-blocking)
-    if (order.customer?.phone) {
-      const options = getNewOrderMessage(order.customer.name, order.orderNumber);
-      sendWhatsAppMessage(order.customer.phone, options).catch(() => {});
+    // Decrease product stock
+    if (order.items && order.items.length > 0) {
+      for (const item of order.items) {
+        if (item.product) {
+          await Product.findByIdAndUpdate(item.product, {
+            $inc: { stock: -item.quantity }
+          });
+        }
+      }
     }
 
-    res.status(201).json({ success: true, data: order });
+    // Send WhatsApp welcome message
+    let whatsappStatus = 'skipped';
+    if (order.customer?.phone) {
+      const options = getNewOrderMessage(order.customer.name, order.orderNumber);
+      const sent = await sendWhatsAppMessage(order.customer.phone, options);
+      whatsappStatus = sent ? 'sent' : 'failed';
+    }
+
+    res.status(201).json({ success: true, data: order, whatsappStatus });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }
@@ -91,18 +106,36 @@ router.put('/:id', protect, async (req, res) => {
 router.patch('/:id/status', protect, async (req, res) => {
   try {
     const { status } = req.body;
-    const order = await Order.findByIdAndUpdate(req.params.id, { status }, { new: true });
-    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
 
-    // Send WhatsApp status notification (non-blocking)
-    if (order.customer?.phone) {
-      const options = getStatusMessage(status, order.customer.name, order.orderNumber);
-      if (options) {
-        sendWhatsAppMessage(order.customer.phone, options).catch(() => {});
+    const oldOrder = await Order.findById(req.params.id);
+    if (!oldOrder) return res.status(404).json({ success: false, message: 'Order not found' });
+
+    const order = await Order.findByIdAndUpdate(req.params.id, { status }, { new: true });
+
+    // Restore stock if cancelled (and wasn't already cancelled)
+    if (status === 'Cancelled' && oldOrder.status !== 'Cancelled') {
+      if (order.items && order.items.length > 0) {
+        for (const item of order.items) {
+          if (item.product) {
+            await Product.findByIdAndUpdate(item.product, {
+              $inc: { stock: item.quantity }
+            });
+          }
+        }
       }
     }
 
-    res.json({ success: true, data: order });
+    // Send WhatsApp status notification
+    let whatsappStatus = 'skipped';
+    if (order.customer?.phone) {
+      const options = getStatusMessage(status, order.customer.name, order.orderNumber);
+      if (options) {
+        const sent = await sendWhatsAppMessage(order.customer.phone, options);
+        whatsappStatus = sent ? 'sent' : 'failed';
+      }
+    }
+
+    res.json({ success: true, data: order, whatsappStatus });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }

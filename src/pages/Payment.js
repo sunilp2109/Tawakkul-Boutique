@@ -7,7 +7,7 @@ window.completeOrder = async () => {
   const details = JSON.parse(sessionStorage.getItem('checkout_details') || '{}');
 
   if (!details.name) {
-    alert("Order details missing. Please go back to checkout.");
+    window.showToast("Order details missing. Please go back to checkout.", "error");
     return;
   }
 
@@ -56,7 +56,7 @@ window.completeOrder = async () => {
     }
   } catch (error) {
     console.error("Order Error:", error);
-    alert("Something went wrong while placing your order. Please try again.");
+    window.showToast("Something went wrong while placing your order. Please try again.", "error");
     btn.disabled = false;
     btn.innerHTML = originalText;
   }

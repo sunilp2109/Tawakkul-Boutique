@@ -2,6 +2,7 @@ const express = require('express');
 const Banner = require('../models/Banner');
 const { protect } = require('../middleware/auth');
 const upload = require('../middleware/upload');
+const { bannerValidator } = require('../middleware/validators');
 
 const router = express.Router();
 
@@ -14,7 +15,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.post('/', protect, upload.single('image'), async (req, res) => {
+router.post('/', protect, upload.single('image'), bannerValidator, async (req, res) => {
   try {
     const imageUrl = req.file ? `/uploads/${req.file.filename}` : req.body.imageUrl;
     const banner = await Banner.create({ ...req.body, imageUrl });
@@ -24,7 +25,7 @@ router.post('/', protect, upload.single('image'), async (req, res) => {
   }
 });
 
-router.put('/:id', protect, upload.single('image'), async (req, res) => {
+router.put('/:id', protect, upload.single('image'), bannerValidator, async (req, res) => {
   try {
     const update = { ...req.body };
     if (req.file) update.imageUrl = `/uploads/${req.file.filename}`;
